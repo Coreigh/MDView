@@ -1,0 +1,21 @@
+Font Awesome 7.3.1 (Free)
+
+The icon SVGs in this project are not bundled here. All Font Awesome icons
+are inlined directly into the HTML files as `<svg>` elements with paths
+copied from Font Awesome's `solid/`, `regular/`, and `brands/` SVG sets.
+There is no `svg-with-js/` subdirectory and no `all.min.css`.
+
+The CDN-loaded Font Awesome CSS was removed in v13.2 to eliminate the
+`cdnjs.cloudflare.com` external-origin dependency. Each `<svg>` element
+carries its own FA attribution comment header, and the project's Credits
+modal (hamburger menu) lists the library version and CC BY 4.0 license.
+
+Files in this directory:
+- `favicon.svg`    Markdown brand icon (FA `brands/markdown.svg`, 7.3.1)
+- `LICENSE`        Font Awesome Free 7.3.1 license (Icons CC BY 4.0, Fonts SIL OFL 1.1, Code MIT)
+- `README`         This file
+
+For user-facing attribution, see the Credits modal in the hamburger menu.
+For the full upstream license text, see `LICENSE` in this directory.
+
+Source: https://github.com/FortAwesome/Font-Awesome/tree/7.3.1

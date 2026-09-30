@@ -1,0 +1,1161 @@
+/* SPDX-License-Identifier: MIT */
+
+/* Light & Dark Theme Variable Architecture */
+:root {
+  --bg-color: #f8f9fa;
+  --surface-color: #ffffff;
+  --text-color: #212529;
+  --text-muted: #555555;
+  --border-color: #cccccc;
+  --primary-color: #0073aa;
+  --drop-active: #e5f5fa;
+  --code-bg: #f1f3f5;
+  --dropdown-hover: #e9ecef;
+  --focus-pane-max-width: 800px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: #121212;
+    --surface-color: #1e1e1e;
+    --text-color: #e0e0e0;
+    --text-muted: #aaaaaa;
+    --border-color: #333333;
+    --primary-color: #4db8ff;
+    --drop-active: #1a2a3a;
+    --code-bg: #2d2d2d;
+    --dropdown-hover: #2a2a2a;
+  }
+}
+
+html[data-theme="dark"] {
+  --bg-color: #121212;
+  --surface-color: #1e1e1e;
+  --text-color: #e0e0e0;
+  --text-muted: #aaaaaa;
+  --border-color: #333333;
+  --primary-color: #4db8ff;
+  --drop-active: #1a2a3a;
+  --code-bg: #2d2d2d;
+  --dropdown-hover: #2a2a2a;
+}
+
+html[data-theme="light"] {
+  --bg-color: #f8f9fa;
+  --surface-color: #ffffff;
+  --text-color: #212529;
+  --text-muted: #555555;
+  --border-color: #cccccc;
+  --primary-color: #0073aa;
+  --drop-active: #e5f5fa;
+  --code-bg: #f1f3f5;
+  --dropdown-hover: #e9ecef;
+}
+
+.icon {
+  width: 1em;
+  height: 1em;
+  fill: currentColor;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.icon[hidden] { display: none; }
+
+/* Utility: state-driven hide (v15.3) */
+.hidden { display: none !important; }
+
+/* Core Layout */
+body {
+  display: flex;
+  flex-direction: column;
+  height: 98vh;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--surface-color);
+  color: var(--text-color);
+}
+
+/* Root font-size: viewport-relative on mobile so welcome card scales with
+   device size, fixed on desktop to preserve existing rem-based sizing
+   across the rest of the app (Step 48 - mobile fresh-document entry point).
+   See ICEBOX.md "Mobile fresh-document entry point" for scope + verification. */
+html {
+  font-size: clamp(14px, 2.5vw, 18px);
+}
+
+@media (min-width: 800px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+/* Scroll-bars */
+/* width */
+::-webkit-scrollbar { width: 10px; }
+/* Track */
+::-webkit-scrollbar-track { background: var(--surface-color); }
+/* Handle */
+::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover { background: var(--primary-color); }
+
+#toolbar {
+  display: flex;
+  align-items: stretch;
+  margin: 10px;
+  gap: 10px;
+}
+
+/* Mobile toolbar spacer (v15.3 post-load UX): pushes the hamburger menu to the
+   right on mobile after a file loads and the drop-zone becomes hidden. Hidden on
+   desktop where the drop-zone's flex:1 already provides spacing. */
+#mobile-toolbar-spacer {
+  display: none;
+}
+
+/* Address Bar (Action Strip: File Name + Editor Actions | Divider | Preview Actions) */
+.container-flex {
+  display: flex;
+}
+
+#action-bar {
+  margin: 0 10px 6px 10px;
+  padding: 0;
+  display: flex;
+  align-items: stretch;
+  box-sizing: border-box;
+  user-select: none;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  height: 36px;
+}
+
+#action-bar-left {
+  flex: 0 0 calc(50% - 232px);
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  overflow: hidden;
+}
+
+#action-bar-left .icon {
+  color: var(--primary-color);
+  flex-shrink: 0;
+}
+
+#address-bar-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+#action-bar.has-file {
+  color: var(--text-color);
+}
+
+#action-bar.has-file #address-bar-name {
+  font-weight: 500;
+}
+
+#address-bar-meta {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+#action-bar-editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding-right: 8px;
+}
+
+#action-bar-divider {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border-color);
+}
+
+#action-bar-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0 8px;
+  width: 49%;
+}
+
+#action-bar-preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* Single pane mode: hide inactive pane's buttons and the visual divider line.
+   Uses body:has() to bridge from the workspace (where focus-* lives) to the
+   action-bar (sibling of workspace, not descendant). The pre-v15.3 selector
+   `#workspace.focus-preview #action-bar-editor-actions` never matched because
+   action-bar-editor-actions is inside #action-bar, a sibling of #workspace. */
+body:has(#workspace.focus-editor) #action-bar-preview-actions,
+body:has(#workspace.focus-preview) #action-bar-editor-actions {
+  display: none;
+}
+
+/* Desktop preview mode: anchor preview-actions at right edge (v15.3 Problem 4
+   partial fix). In preview mode the editor-actions group is hidden (display:none
+   above), leaving the right column with empty content and excess slack. Setting
+   flex:auto on #action-bar-right makes it absorb the freed space, growing from
+   its base 49% width to fill the available width. Preview-actions inside it
+   keeps its margin-left:auto, so it sits at the rightmost edge of the action-bar.
+   Scoped to the specific condition set (desktop AND preview mode) via
+   body:has(#workspace.focus-preview). Editor mode (focus-editor) is unaffected:
+   #action-bar-right keeps its base width:49% / flex-shrink:0, matching the
+   existing desktop UX. Condition is also not satisfied on mobile (<800px), where
+   the mobile media query's width:auto override at line 309-311 already applies. */
+body:has(#workspace.focus-preview) #action-bar-right {
+  flex: auto;
+  width: auto;
+}
+
+/* Hide the visual divider line in single pane mode (but keep the column
+   visible so the active buttons remain in place). Uses body:has() to bridge
+   from the workspace (where focus-* lives) to the action-bar (sibling of
+   workspace, not descendant). The pre-v15.3 selector
+   `#workspace.focus-preview #action-bar-divider` never matched because
+   #action-bar-divider is inside #action-bar, a sibling of #workspace.
+   Step 50 (2026-09-27) corrected the selector bridge to match the
+   Step 13 button fix pattern - the previous descendant selector was
+   left over from the original v15.1.1 implementation and silently
+   never fired. */
+body:has(#workspace.focus-editor) #action-bar-divider,
+body:has(#workspace.focus-preview) #action-bar-divider {
+  border-right: none;
+}
+
+/* Mobile toggle icons in focus-preview-btn (v15.3 post-load UX): hidden on
+   desktop by default. The mobile media query block swaps which one is shown
+   based on the workspace focus state. This rule MUST come BEFORE the mobile
+   media query so its source order doesn't override the mobile override. */
+#focus-preview-toggle-edit,
+#focus-preview-toggle-preview {
+  display: none;
+}
+
+/* Mobile (< 800px): viewport-conditional behavior (v15.3) */
+@media (max-width: 799px) {
+  /* Flatten the divider so its child (#action-bar-editor-actions) becomes a
+     direct flex child of #action-bar. On desktop the divider renders with a
+     visible border-right and right-aligned editor actions; on mobile we want
+     all action buttons (editor + preview) bunched at the right end of the
+     action-bar with the file name on the left. The divider box itself is
+     removed but its children stay in layout. */
+  #action-bar-divider {
+    display: contents;
+  }
+
+  /* Lock-scroll button hidden: only one pane visible on mobile, nothing to sync */
+  #lock-scroll-btn { display: none; }
+
+  /* Compress (focus-icon-in) icons hidden: split mode doesn't exist on mobile,
+     so "restore split" affordance is meaningless; only the expand icon shows */
+  .focus-icon-in { display: none; }
+
+  /* If the workspace somehow has no focus-* class on mobile (e.g., after a
+     wide->narrow resize), force single-pane by hiding the last pane container
+     to prevent a 50/50 split layout in a viewport too narrow for it */
+  #workspace:not(.focus-editor):not(.focus-preview) #preview-pane {
+    display: none;
+  }
+
+  /* Drop-zone hidden on mobile: replaced by #mobile-toolbar-spacer to push
+     the hamburger menu right. Drag-and-drop is impractical on mobile
+     browsers; the welcome screen's Browse Files label is the file-load
+     path on mobile. */
+  #drop-zone {
+    display: none;
+  }
+
+  /* Mobile toolbar spacer: visible at <800px to push the hamburger menu right
+     after the drop-zone is hidden by content-loaded welcome state. */
+  #mobile-toolbar-spacer {
+    display: block;
+    flex: 1;
+  }
+
+  /* Focus button - mobile toggle (v15.3 post-load UX): the focus-preview-btn
+     becomes a single mobile toggle between preview and editor. The desktop
+     expand/compress icons are hidden; mobile-specific pencil (edit) and eye
+     (preview) icons take their place. Initial state: preview mode is active
+     (set by setFocusedPane('preview') on mobile file open), so the pencil icon
+     ("Switch to Edit") shows. When the user taps and toggles to editor mode,
+     the eye icon ("Switch to Preview") shows instead. The icon-swap rules use
+     body:has(#workspace.focus-editor) because the toggle icons live inside
+     #action-bar-preview-actions (a sibling of #workspace, not a descendant);
+     a plain #workspace.focus-editor ... descendant selector can never match. */
+  #focus-editor-btn { display: none; }
+  #focus-preview-icon-out,
+  #focus-preview-icon-in { display: none; }
+  #focus-preview-toggle-edit { display: inline-block; }
+  body:has(#workspace.focus-editor) #focus-preview-toggle-edit { display: none; }
+  body:has(#workspace.focus-editor) #focus-preview-toggle-preview { display: inline-block; }
+
+  /* Mobile per-mode button visibility (v15.3 mobile-friendly toggle):
+     The base single-pane rule at lines 212-215 hides the entire
+     #action-bar-preview-actions container in editor mode on ALL viewports.
+     With #focus-preview-btn now inside that container (mdedit_v15.3.2.html:96),
+     the base rule would hide the toggle on mobile -- making it impossible
+     to switch back to preview. This override keeps the container visible
+     on mobile and hides only copy/select individually. The editor side
+     (#action-bar-editor-actions) stays handled by the base rule's
+     container-level hide in preview mode (existing behavior).
+
+     Step 49 (2026-09-27): also hide #preview-options-btn in editor mode.
+     The options button is inert (no click handler, no popup) until the
+     Display Options menu shell ships (ICEBOX.md). Showing an inert button
+     on the wrong pane is visual noise; hide it in the non-active pane
+     just like #copy-preview-btn and #select-preview-btn. */
+  body:has(#workspace.focus-editor) #action-bar-preview-actions {
+    display: flex;
+  }
+  body:has(#workspace.focus-editor) #copy-preview-btn,
+  body:has(#workspace.focus-editor) #select-preview-btn,
+  body:has(#workspace.focus-editor) #preview-options-btn {
+    display: none;
+  }
+
+  /* Mobile action-bar layout (v15.3 post-load UX): align all action buttons
+     to the right end. The file name (#action-bar-left) sits on the left,
+     then all editor + preview action buttons (#action-bar-editor-actions and
+     #action-bar-preview-actions) bunched at the right edge.
+
+     - #action-bar-left: drop the rigid calc() width, let it shrink to file-name width
+     - #action-bar-editor-actions: margin-left:auto pushes itself (and the
+       preview-actions after it) to the right edge of the action-bar
+     - #action-bar-right: drop the fixed 49% width so it sits content-sized
+       right after the editor actions (no leftover gap on the right edge) */
+  #action-bar-left {
+    flex: 1 1 auto;
+  }
+  #action-bar-editor-actions {
+    margin-left: auto;
+    padding-right: 0;
+  }
+  #action-bar-right {
+    width: auto;
+  }
+  /* Pin toggle button to the right edge on mobile: order:99 makes it the last
+     flex child inside #action-bar-right, so in both preview and edit modes the
+     toggle occupies the rightmost slot. Without this the toggle shifts between
+     modes because #action-bar-preview-actions { margin-left: auto } inherits
+     from the base CSS (desktop layout) and only pushes preview-actions right
+     when visible; with preview-actions hidden (edit mode) the toggle alone
+     falls to the left edge of #action-bar-right, which is the rightmost column
+     of #action-bar -- an apparent flip between left-of-group and right-of-bar
+     that disappears once the toggle itself has an anchor rule. */
+  #focus-preview-btn {
+    order: 99;
+  }
+}
+
+/* Interactive Components */
+#branding,
+#toolbar-right {
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  box-sizing: border-box;
+  color: var(--primary-color);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  position: relative;
+}
+
+#branding:hover,
+#toolbar-right:hover {
+  background-color: var(--drop-active);
+  border-color: var(--primary-color);
+}
+
+.branding-icon {
+  width: 1.8rem;
+  height: 1.8rem;
+}
+
+#toolbar-right .icon {
+  width: 2.0rem;
+  height: 2.0rem;
+}
+
+#guidelink {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Hamburger Dropdown Menu */
+#menu-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  min-width: 180px;
+  z-index: 900;
+  overflow: hidden;
+}
+
+#menu-dropdown.active {
+  display: block;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  color: var(--text-color);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.menu-item:hover {
+  background-color: var(--dropdown-hover);
+}
+
+.menu-item .icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.menu-divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 4px 0;
+}
+
+#drop-zone {
+  flex: 1;
+  padding: 15px;
+  border: 2px dashed var(--border-color);
+  border-radius: 4px;
+  background-color: var(--bg-color);
+  text-align: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+#drop-zone.dragover {
+  background-color: var(--drop-active);
+  border-color: var(--primary-color);
+}
+
+#drop-zone p {
+  margin: 0 0 8px 0;
+  color: var(--text-muted);
+}
+
+.browse-btn {
+  background-color: var(--primary-color);
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 3px;
+  font-size: 13px;
+  display: inline-block;
+  cursor: pointer;
+}
+
+/* Restore Banner (Session Persistence) */
+#restore-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 10px 10px 10px;
+  padding: 10px 14px;
+  background-color: var(--drop-active);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--primary-color);
+  border-radius: 4px;
+  color: var(--text-color);
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+#restore-banner .icon {
+  color: var(--primary-color);
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+#restore-banner.hidden {
+  display: none;
+}
+
+#restore-banner-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#restore-banner-text strong {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.rb-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.rb-btn {
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  border-radius: 3px;
+  padding: 5px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.rb-btn:hover {
+  background-color: var(--surface-color);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.rb-btn.primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #ffffff;
+}
+
+.rb-btn.primary:hover {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #ffffff;
+  filter: brightness(1.1);
+}
+
+/* Modal Overlay & Containers */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal-content {
+  background: var(--surface-color);
+  color: var(--text-color);
+  padding: 25px;
+  border-radius: 6px;
+  max-width: 650px;
+  width: 90%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  position: relative;
+  box-sizing: border-box;
+  border: 1px solid var(--border-color);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+  flex-shrink: 0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: var(--text-color);
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  color: var(--text-color);
+}
+
+#fmt-cancel {
+  margin-top: 12px;
+  font-size: 0.9rem;
+}
+
+.modal-body {
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.modal-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+}
+
+.modal-body th,
+.modal-body td {
+  border: 1px solid var(--border-color);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.modal-body th {
+  background-color: var(--bg-color);
+}
+
+code {
+  display: inline-block;
+  background-color: var(--code-bg);
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+pre code {
+  display: block;
+  padding: 0;
+  background-color: transparent;
+}
+
+pre {
+  padding: 16px;
+  background-color: var(--code-bg);
+  border-radius: 6px;
+}
+
+.modal-body a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.modal-body a:hover {
+  text-decoration: underline;
+}
+
+/* Outbound-link affordance (v15.3.1): small glyph after external http(s)
+   anchors. Applies to static Credits-modal anchors and any future outbound
+   anchor (including those rendered from user-loaded markdown via marked).
+   Pure decoration; does not affect text selection or copy behavior. */
+a[href^="http://"]::after,
+a[href^="https://"]::after {
+  content: " \2197";
+  margin-left: 0.15em;
+  font-size: 0.85em;
+  opacity: 0.6;
+}
+
+/* Docs Modal body (Step 39): rendered markdown content. Inherits most
+   styling from .modal-body; this rule just adds a readable line-height
+   for prose paragraphs and a top margin for the first child heading. */
+.docs-modal-body {
+  line-height: 1.55;
+}
+.docs-modal-body > h1:first-child,
+.docs-modal-body > h2:first-child,
+.docs-modal-body > h3:first-child {
+  margin-top: 0;
+}
+.docs-modal-body code {
+  background-color: var(--code-bg);
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+.docs-modal-body pre {
+  background-color: var(--code-bg);
+  padding: 10px;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+.docs-modal-body pre code {
+  background: none;
+  padding: 0;
+}
+
+/* Workspace Panels */
+#workspace {
+  display: flex;
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+}
+
+#editor, #preview {
+  width: 100%;
+  height: 100%;
+  padding: 40px 15px 15px 15px;
+  box-sizing: border-box;
+}
+
+#editor {
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 14px;
+  background-color: var(--surface-color);
+  color: var(--text-color);
+  border: none;
+  resize: none;
+  outline: none;
+}
+
+#preview {
+  overflow-y: auto;
+  background-color: var(--surface-color);
+  color: var(--text-color);
+}
+
+/* Preview-rendered markdown elements (Step 47, 2026-09-23):
+   Mirrors the WHATWG HTML Living Standard / browser UA defaults so the
+   preview renders consistently across Chrome, Firefox, Safari, and Edge,
+   and so the Save As HTML export carries meaningful styling into Word,
+   LibreOffice Writer, Google Docs, and email clients. The same rule block
+   is duplicated in HTML_EXPORT_CSS in app_v15.3.2.js for the export
+   wrapper. Keep both copies in sync. */
+#preview h1 { font-size: 2.00em; margin: 0.67em 0; font-weight: bold; }
+#preview h2 { font-size: 1.50em; margin: 0.83em 0; font-weight: bold; }
+#preview h3 { font-size: 1.17em; margin: 1.00em 0; font-weight: bold; }
+#preview h4 { font-size: 1.00em; margin: 1.33em 0; font-weight: bold; }
+#preview h5 { font-size: 0.83em; margin: 1.67em 0; font-weight: bold; }
+#preview h6 { font-size: 0.67em; margin: 2.33em 0; font-weight: bold; }
+
+#preview p     { margin: 1em 0; }
+#preview blockquote { margin: 1em 40px; }
+
+#preview ul, #preview ol { margin: 1em 0; padding-left: 40px; }
+#preview li            { display: list-item; }
+#preview ul ul, #preview ol ol,
+#preview ul ol, #preview ol ul { margin-top: 0; margin-bottom: 0; }
+
+#preview table { border-collapse: collapse; }
+#preview th, #preview td { border: 1px solid var(--border-color); padding: 1px; vertical-align: top; }
+
+#preview a       { color: -webkit-link; text-decoration: underline; }
+#preview img     { max-width: 100%; }
+#preview hr      { border: none; border-top: 1px solid var(--border-color); margin: 1em 0; }
+
+#preview dl, #preview dd { margin: 0; }
+#preview dt { font-weight: bold; }
+
+#file-input {
+  display: none;
+}
+
+/* Pane Container Layout (wraps each editor/preview section) */
+.pane-container {
+  position: relative;
+  width: 50%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Pane focus border: only the editor pane gets the divider line in split view. */
+#editor-pane {
+  border-right: 1px solid var(--border-color);
+}
+
+/* Pane Focus Mode: hide non-focused pane, center the focused one with max-width.
+   ID selectors (not :first-of-type) because :first-of-type matches by tag name
+   (the first <div> child is #welcome-screen, not the editor pane). */
+#workspace.focus-editor #preview-pane,
+#workspace.focus-preview #editor-pane {
+  display: none;
+}
+#workspace.focus-editor #editor-pane,
+#workspace.focus-preview #preview-pane {
+  width: 100%;
+  max-width: var(--focus-pane-max-width);
+  margin-left: auto;
+  margin-right: auto;
+  border-right: none;
+}
+
+/* Unicode focus icon (U+26F6) sizing inside .pane-actions */
+.focus-icon-out {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* Welcome Screen (v15.3): shown when no file is loaded and editor is empty */
+#welcome-screen {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  box-sizing: border-box;
+}
+
+/* When the welcome screen is visible, hide the pane containers so they don't
+   fight for flex space. The :not(.hidden) selector ties the pane visibility
+   to the welcome screen's own hidden state. */
+#welcome-screen:not(.hidden) ~ .pane-container {
+  display: none;
+}
+
+.welcome-card {
+  text-align: center;
+  max-width: 30rem;
+  width: min(92vw, 36rem);
+  padding: 1.875rem 1.5rem;
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+  box-sizing: border-box;
+}
+
+.welcome-heading {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.welcome-subtext {
+  margin: 0 0 1rem 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.welcome-browse-btn {
+  display: inline-block;
+  background-color: var(--primary-color);
+  color: #ffffff;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  transition: filter 0.15s ease;
+}
+
+.welcome-browse-btn:hover {
+  filter: brightness(1.1);
+}
+
+/* Start new document button (Step 48 - mobile fresh-document entry point).
+   Case-specific positioning: rendered above the Browse Files button on the
+   mobile welcome card, hidden on desktop (where the empty editor itself is
+   the entry point). Styled like the Browse button (same dimensions/padding)
+   with a white background and primary-color text/border to differentiate
+   the secondary action visually (per user direction). */
+#start-new-doc-btn {
+  display: inline-block;
+  background-color: #ffffff;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin: 0 0 0.75rem 0;
+  transition: filter 0.15s ease;
+}
+
+#start-new-doc-btn:hover {
+  filter: brightness(0.95);
+}
+
+@media (min-width: 800px) {
+  #start-new-doc-btn {
+    display: none;
+  }
+}
+
+.welcome-hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* Action Toolbar (now residing in the address bar, no longer floating) */
+.pane-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pane-btn {
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.pane-btn:hover {
+  background-color: var(--drop-active);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.pane-btn.locked {
+  background-color: var(--drop-active);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.pane-btn.copied {
+  background-color: #28a745;
+  border-color: #28a745;
+  color: #ffffff;
+}
+
+.pane-btn.selected {
+  background-color: #28a745;
+  border-color: #28a745;
+  color: #ffffff;
+}
+
+/* Format Picker Modal */
+.format-picker-content {
+  background: var(--surface-color);
+  color: var(--text-color);
+  padding: 25px;
+  border-radius: 6px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border-color);
+}
+
+.format-picker-content h3 {
+  margin: 0 0 6px 0;
+  color: var(--text-color);
+}
+
+.format-picker-content p {
+  margin: 0 0 16px 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.format-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.format-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-color);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  text-align: left;
+}
+
+.format-btn:hover {
+  background-color: var(--drop-active);
+  border-color: var(--primary-color);
+}
+
+.format-btn .icon {
+  width: 20px;
+  height: 20px;
+  color: var(--primary-color);
+}
+
+.format-label {
+  flex: 1;
+}
+
+.format-ext {
+  color: var(--text-muted);
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+/* Settings Modal (Step 29) */
+.settings-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: var(--text-color);
+}
+
+.settings-checkbox-label input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.settings-help {
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 8px 12px;
+  background-color: var(--bg-color);
+}
+
+.settings-help summary {
+  cursor: pointer;
+  color: var(--primary-color);
+  font-size: 0.9rem;
+  user-select: none;
+  outline: none;
+}
+
+.settings-help summary:hover {
+  text-decoration: underline;
+}
+
+.settings-help[open] summary {
+  margin-bottom: 8px;
+}
+
+.settings-help p {
+  margin: 0 0 8px 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.settings-help p:last-child {
+  margin-bottom: 0;
+}
+
+/* URL Loading Indicator (Step 30) */
+.spinner {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  animation: mdview-spin 1s linear infinite;
+  color: var(--primary-color);
+}
+
+@keyframes mdview-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Inline spinner inside #drop-zone: small, no cancel button */
+#url-loading-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+#url-loading-inline.hidden { display: none; }
+
+/* Floating overlay: shown when drop-zone is hidden (mobile, content loaded) */
+#url-loading-overlay {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 100;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  font-size: 0.9rem;
+  color: var(--text-color);
+  max-width: calc(100vw - 40px);
+}
+#url-loading-overlay.hidden { display: none; }
+
+#url-loading-overlay-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
+}
+
+#url-loading-cancel {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0 4px;
+  margin-left: 4px;
+}
+#url-loading-cancel:hover { text-decoration: underline; }
